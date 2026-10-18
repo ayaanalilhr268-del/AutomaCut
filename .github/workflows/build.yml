@@ -6,6 +6,7 @@ on:
   push:
     paths:
       - '.github/workflows/build.yml'
+      - 'Untitled design (1).png'
 
 permissions:
   contents: read
@@ -30,10 +31,9 @@ jobs:
       - name: Find HTML prototype
         run: |
           mkdir -p app/src/main/assets
-          find . -maxdepth 3 -iname '*.html' -print
-          HTML_FILE="$(find . -maxdepth 3 -iname 'AutomaCut Interactive Prototype (2).html' -print -quit)"
+          HTML_FILE="$(find . -maxdepth 4 -type f -iname 'AutomaCut Interactive Prototype (2).html' -print -quit)"
           if [ -z "$HTML_FILE" ]; then
-            HTML_FILE="$(find . -maxdepth 3 -iname '*.html' -print -quit)"
+            HTML_FILE="$(find . -maxdepth 4 -type f -iname '*.html' -print -quit)"
           fi
           if [ -z "$HTML_FILE" ]; then
             echo "No HTML file found in repository."
@@ -44,12 +44,16 @@ jobs:
       - name: Create Android project
         run: |
           mkdir -p app/src/main/res/mipmap-mdpi app/src/main/res/mipmap-hdpi app/src/main/res/mipmap-xhdpi app/src/main/res/mipmap-xxhdpi app/src/main/res/mipmap-xxxhdpi
-          cp "Untitled design (1).png" app/src/main/res/mipmap-mdpi/ic_launcher.png
-          cp "Untitled design (1).png" app/src/main/res/mipmap-hdpi/ic_launcher.png
-          cp "Untitled design (1).png" app/src/main/res/mipmap-xhdpi/ic_launcher.png
-          cp "Untitled design (1).png" app/src/main/res/mipmap-xxhdpi/ic_launcher.png
-          cp "Untitled design (1).png" app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
-          
+          LOGO_FILE="$(find . -type f -iname 'Untitled design (1).png' -not -path './.git/*' -print -quit)"
+          if [ -z "$LOGO_FILE" ]; then
+            echo "Logo not found. Check the filename in the repository."
+            exit 1
+          fi
+          cp "$LOGO_FILE" app/src/main/res/mipmap-mdpi/ic_launcher.png
+          cp "$LOGO_FILE" app/src/main/res/mipmap-hdpi/ic_launcher.png
+          cp "$LOGO_FILE" app/src/main/res/mipmap-xhdpi/ic_launcher.png
+          cp "$LOGO_FILE" app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+          cp "$LOGO_FILE" app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
 
           cat > settings.gradle <<'EOF'
           pluginManagement {
@@ -115,6 +119,8 @@ jobs:
           </manifest>
           EOF
 
+          mkdir -p app/src/main/java/com/automatcut/app
+
           cat > app/src/main/java/com/automatcut/app/MainActivity.java <<'EOF'
           package com.automatcut.app;
 
@@ -144,7 +150,6 @@ jobs:
 
               @Override
               public void onBackPressed() {
-                  setContentView(new WebView(this));
                   super.onBackPressed();
               }
           }
@@ -161,3 +166,6 @@ jobs:
           name: AutomaCut-apk
           path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
+
+  
+                  
