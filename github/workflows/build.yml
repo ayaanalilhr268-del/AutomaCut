@@ -1,0 +1,48 @@
+
+name: Build AutomaCut APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '**.html'
+      - '.github/workflows/build.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get project files
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Prepare Android app
+        run: |
+          HTML_FILE=$(find . -maxdepth 1 -type f -iname '*.html' | head -n 1)
+          if [ -z "$HTML_FILE" ]; then
+            echo "No HTML file found in repository root"
+            exit 1
+          fi
+          npm install -g cordova
+          cordova create wrapper com.automacut.app AutomaCut
+          cp "$HTML_FILE" wrapper/www/index.html
+          cd wrapper
+          cordova platform add android
+          cordova build android --debug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: AutomaCut-APK
+          path: wrapper/platforms/android/app/build/outputs/apk/debug/*.apk
